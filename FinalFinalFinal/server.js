@@ -449,7 +449,7 @@ app.delete("/api/reservations/:id", (req, res) => {
 });
 
 const PORT = parseInt(process.env.PORT || "4000", 10) || 4000;
-const HOST = process.env.HOST || "0.0.0.0";
+const HOST = process.env.HOST || "192.168.1.23";
 
 httpServer.listen(PORT, HOST, () => {
   const printableHost = (HOST === "0.0.0.0" || HOST === "::") ? "<LAN IP>" : HOST;
