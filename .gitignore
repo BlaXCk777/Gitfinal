@@ -1,16 +1,27 @@
 # Node modules
-node_modules/
+**/node_modules/
 
 # Logs
 *.log
+npm-debug.log*
 
 # PID files
 *.pid
 
+# Database
+**/data/db.json
+
 # OS files
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # IDE files
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# Build outputs
+dist/
+build/
