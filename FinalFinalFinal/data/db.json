@@ -1,0 +1,628 @@
+{
+  "customers": [],
+  "companies": [
+    {
+      "id": "comp_mj87qwkz4c2m",
+      "name": "(BG)ชื่อ,ที่อยู่(ลูกค้า)  บริษัท บีจี ทราเวล จำกัด",
+      "taxId": "0835556011471",
+      "address": "8/91 หมู่ที่ 3 ตำบลวิชิต อำเภอเมือ\nงภูเก็ต จังหวัดภูเก็ต 83000",
+      "phone": "",
+      "contact": ""
+    },
+    {
+      "id": "comp_mj8gcj98qlr1",
+      "name": "(PCNT) บริษัท พีซีเอ็นที",
+      "taxId": "0835560012419",
+      "address": "8/91 หมู่ที่ 3 ตำบลวิชิต อำเภอเมือ\nงภูเก็ต จังหวัดภูเก็ต 83000",
+      "phone": "",
+      "contact": ""
+    }
+  ],
+  "menu": [
+    {
+      "id": "menu_mj6s88saz0ir",
+      "name": "삼겹살",
+      "price": 280,
+      "category": "Main",
+      "description": ""
+    },
+    {
+      "id": "menu_mj6yh2qpsd9g",
+      "name": "쌈밥(HM)",
+      "price": 300,
+      "category": "Main",
+      "description": ""
+    },
+    {
+      "id": "menu_mj74a3mfstxu",
+      "name": "Makgulli",
+      "price": 350,
+      "category": "Beverage",
+      "description": ""
+    },
+    {
+      "id": "menu_mj74af9bjqlg",
+      "name": "Soju",
+      "price": 350,
+      "category": "Beverage",
+      "description": ""
+    },
+    {
+      "id": "menu_mj86sa7uivv4",
+      "name": "쌈밥",
+      "price": 280,
+      "category": "Main",
+      "description": ""
+    },
+    {
+      "id": "menu_mj8g0popi8mm",
+      "name": "삼겹살 (HM)",
+      "price": 330,
+      "category": "Main",
+      "description": ""
+    },
+    {
+      "id": "menu_mj8g22xtob8m",
+      "name": "맥주",
+      "price": 170,
+      "category": "Beverage",
+      "description": ""
+    },
+    {
+      "id": "menu_mj8g2u3ncf5z",
+      "name": "음료",
+      "price": 30,
+      "category": "Beverage",
+      "description": ""
+    },
+    {
+      "id": "menu_mj8g7azqkkoq",
+      "name": "수끼",
+      "price": 250,
+      "category": "Main",
+      "description": ""
+    },
+    {
+      "id": "menu_mj8g7vo3her8",
+      "name": "수끼(HM)",
+      "price": 280,
+      "category": "Main",
+      "description": ""
+    }
+  ],
+  "bookings": [],
+  "reservations": [
+    {
+      "id": "resv_mj866znn9rt0",
+      "date": "2025-12-16",
+      "time": "12:30",
+      "table": "18A",
+      "customerName": "Jin",
+      "phone": "",
+      "companyName": "",
+      "pax": 13,
+      "menu": "",
+      "notes": "",
+      "createdAt": "2025-12-16T05:56:47.747Z"
+    },
+    {
+      "id": "resv_mj87ucnxep7e",
+      "date": "2025-12-16",
+      "time": "16:20",
+      "table": "8A",
+      "customerName": "Jin",
+      "phone": "",
+      "companyName": "BG",
+      "pax": 1,
+      "menu": "Ssambab(HM)",
+      "notes": "",
+      "createdAt": "2025-12-16T06:42:57.309Z"
+    }
+  ],
+  "posState": {
+    "tableSplits": {
+      "10": 3
+    },
+    "tableSplitDirections": {
+      "10": "v"
+    },
+    "tablePositions": {
+      "9": {
+        "x": 75,
+        "y": 0
+      },
+      "10": {
+        "x": 450,
+        "y": 75
+      },
+      "12": {
+        "x": 525,
+        "y": 225
+      },
+      "13": {
+        "x": 525,
+        "y": 325
+      },
+      "20": {
+        "x": 0,
+        "y": 258
+      },
+      "23B": {
+        "x": 150,
+        "y": 547
+      },
+      "15B": {
+        "x": 675,
+        "y": 536
+      },
+      "6B": {
+        "x": 825,
+        "y": 86
+      },
+      "1A": {
+        "x": 1200,
+        "y": 0
+      },
+      "1B": {
+        "x": 1200,
+        "y": 86
+      },
+      "7B": {
+        "x": 750,
+        "y": 86
+      },
+      "2A": {
+        "x": 1125,
+        "y": 0
+      },
+      "8A": {
+        "x": 675,
+        "y": 0
+      },
+      "6A": {
+        "x": 825,
+        "y": 0
+      },
+      "3A": {
+        "x": 1050,
+        "y": 0
+      },
+      "4A": {
+        "x": 975,
+        "y": 0
+      },
+      "5A": {
+        "x": 900,
+        "y": 0
+      },
+      "18B": {
+        "x": 225,
+        "y": 86
+      },
+      "8B": {
+        "x": 675,
+        "y": 86
+      },
+      "4B": {
+        "x": 975,
+        "y": 86
+      },
+      "19C": {
+        "x": 225,
+        "y": 172
+      },
+      "7C": {
+        "x": 750,
+        "y": 300
+      },
+      "14A": {
+        "x": 525,
+        "y": 425
+      },
+      "7A": {
+        "x": 750,
+        "y": 0
+      },
+      "18A": {
+        "x": 0,
+        "y": 86
+      },
+      "5B": {
+        "x": 900,
+        "y": 86
+      },
+      "19B": {
+        "x": 150,
+        "y": 225
+      },
+      "17B": {
+        "x": 225,
+        "y": 0
+      },
+      "17A": {
+        "x": 0,
+        "y": 0
+      },
+      "3B": {
+        "x": 1050,
+        "y": 86
+      },
+      "2B": {
+        "x": 1125,
+        "y": 86
+      },
+      "19A": {
+        "x": 0,
+        "y": 172
+      },
+      "21A": {
+        "x": 0,
+        "y": 375
+      },
+      "8C": {
+        "x": 675,
+        "y": 300
+      },
+      "23A": {
+        "x": 0,
+        "y": 547
+      },
+      "22A": {
+        "x": 0,
+        "y": 461
+      },
+      "22B": {
+        "x": 150,
+        "y": 461
+      },
+      "14B": {
+        "x": 675,
+        "y": 450
+      },
+      "15A": {
+        "x": 525,
+        "y": 525
+      },
+      "21B": {
+        "x": 150,
+        "y": 375
+      },
+      "Cashier": {
+        "x": 975,
+        "y": 375
+      },
+      "노래방": {
+        "x": 1125,
+        "y": 300
+      }
+    },
+    "tableSizes": {
+      "9": {
+        "width": 60,
+        "height": 60
+      },
+      "10": {
+        "width": 150,
+        "height": 60
+      },
+      "12": {
+        "width": 60,
+        "height": 60
+      },
+      "13": {
+        "width": 60,
+        "height": 60
+      },
+      "20": {
+        "width": 60,
+        "height": 60
+      },
+      "15B": {
+        "width": 60,
+        "height": 60
+      },
+      "4A": {
+        "width": 60,
+        "height": 60
+      },
+      "17A": {
+        "width": 60,
+        "height": 60
+      },
+      "17B": {
+        "width": 60,
+        "height": 60
+      },
+      "8A": {
+        "width": 60,
+        "height": 60
+      },
+      "7A": {
+        "width": 60,
+        "height": 60
+      },
+      "6A": {
+        "width": 60,
+        "height": 60
+      },
+      "5A": {
+        "width": 60,
+        "height": 60
+      },
+      "3A": {
+        "width": 60,
+        "height": 60
+      },
+      "2A": {
+        "width": 60,
+        "height": 60
+      },
+      "1A": {
+        "width": 60,
+        "height": 60
+      },
+      "18A": {
+        "width": 60,
+        "height": 60
+      },
+      "18B": {
+        "width": 60,
+        "height": 60
+      },
+      "8B": {
+        "width": 60,
+        "height": 60
+      },
+      "7B": {
+        "width": 60,
+        "height": 80
+      },
+      "6B": {
+        "width": 60,
+        "height": 60
+      },
+      "5B": {
+        "width": 60,
+        "height": 60
+      },
+      "4B": {
+        "width": 60,
+        "height": 60
+      },
+      "3B": {
+        "width": 60,
+        "height": 60
+      },
+      "2B": {
+        "width": 60,
+        "height": 60
+      },
+      "1B": {
+        "width": 60,
+        "height": 60
+      },
+      "19A": {
+        "width": 137,
+        "height": 80
+      },
+      "19B": {
+        "width": 60,
+        "height": 60
+      },
+      "19C": {
+        "width": 60,
+        "height": 60
+      },
+      "21A": {
+        "width": 60,
+        "height": 60
+      },
+      "21B": {
+        "width": 60,
+        "height": 60
+      },
+      "8C": {
+        "width": 60,
+        "height": 60
+      },
+      "7C": {
+        "width": 60,
+        "height": 60
+      },
+      "22A": {
+        "width": 60,
+        "height": 60
+      },
+      "22B": {
+        "width": 60,
+        "height": 60
+      },
+      "23A": {
+        "width": 60,
+        "height": 60
+      },
+      "23B": {
+        "width": 60,
+        "height": 60
+      },
+      "14A": {
+        "width": 60,
+        "height": 80
+      },
+      "14B": {
+        "width": 60,
+        "height": 60
+      },
+      "15A": {
+        "width": 60,
+        "height": 60
+      },
+      "Cashier": {
+        "width": 60,
+        "height": 60
+      },
+      "노래방": {
+        "width": 60,
+        "height": 80
+      }
+    },
+    "tableNeedsCleaning": {},
+    "tableList": [
+      "17A",
+      "17B",
+      "9",
+      "8A",
+      "7A",
+      "6A",
+      "5A",
+      "4A",
+      "3A",
+      "2A",
+      "1A",
+      "18A",
+      "18B",
+      "10",
+      "8B",
+      "7B",
+      "6B",
+      "5B",
+      "4B",
+      "3B",
+      "2B",
+      "1B",
+      "19A",
+      "19B",
+      "19C",
+      "20",
+      "21A",
+      "21B",
+      "12",
+      "8C",
+      "7C",
+      "22A",
+      "22B",
+      "13",
+      "23A",
+      "23B",
+      "14A",
+      "14B",
+      "15A",
+      "15B",
+      "Cashier",
+      "노래방"
+    ],
+    "orders": {
+      "9": [],
+      "10": [
+        [
+          {
+            "nameKo": "삼겹살",
+            "nameEn": "삼겹살",
+            "qty": 2,
+            "unit": 280,
+            "total": 560
+          },
+          {
+            "nameKo": "삼겹살",
+            "nameEn": "삼겹살",
+            "qty": 1,
+            "unit": 280,
+            "total": 280
+          }
+        ],
+        [],
+        []
+      ],
+      "12": [],
+      "13": [],
+      "20": [],
+      "17A": [],
+      "17B": [],
+      "8A": [],
+      "7A": [],
+      "6A": [],
+      "5A": [],
+      "4A": [],
+      "3A": [],
+      "2A": [],
+      "1A": [],
+      "18A": [],
+      "18B": [
+        {
+          "nameKo": "쌈밥(HM)",
+          "nameEn": "쌈밥(HM)",
+          "qty": 2,
+          "unit": 300,
+          "total": 600
+        },
+        {
+          "nameKo": "Soju",
+          "nameEn": "Soju",
+          "qty": 1,
+          "unit": 350,
+          "total": 350
+        },
+        {
+          "nameKo": "맥주",
+          "nameEn": "맥주",
+          "qty": 1,
+          "unit": 170,
+          "total": 170
+        }
+      ],
+      "8B": [],
+      "7B": [
+        {
+          "nameKo": "삼겹살 (HM)",
+          "nameEn": "삼겹살 (HM)",
+          "qty": 4,
+          "unit": 330,
+          "total": 1320
+        }
+      ],
+      "6B": [],
+      "5B": [],
+      "4B": [],
+      "3B": [],
+      "2B": [],
+      "1B": [],
+      "19A": [],
+      "19B": [],
+      "19C": [
+        {
+          "nameKo": "쌈밥(HM)",
+          "nameEn": "쌈밥(HM)",
+          "qty": 2,
+          "unit": 300,
+          "total": 600
+        },
+        {
+          "nameKo": "음료",
+          "nameEn": "음료",
+          "qty": 1,
+          "unit": 30,
+          "total": 30
+        }
+      ],
+      "21A": [],
+      "21B": [],
+      "8C": [],
+      "7C": [],
+      "22A": [],
+      "22B": [],
+      "23A": [],
+      "23B": [],
+      "14A": [],
+      "14B": [],
+      "15A": [],
+      "15B": [],
+      "Cashier": [],
+      "노래방": []
+    },
+    "tableOccupiedOverrides": {}
+  },
+  "exchangeRates": {
+    "usd": 0.029,
+    "krw": 39.5
+  }
+}

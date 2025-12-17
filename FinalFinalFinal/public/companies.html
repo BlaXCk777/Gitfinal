@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Companies</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <div>Companies</div>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/customers.html">Customers</a>
+      <a href="/menu.html">Menu</a>
+      <a href="/bookings.html">Daily Bookings</a>
+      <a href="/reservations.html">Reservations</a>
+    </nav>
+  </header>
+  <main>
+    <div class="card">
+      <h1>Companies</h1>
+      <form id="comp-form">
+        <input type="hidden" id="comp-id">
+        <label>
+          <span class="sub">Name</span>
+          <input id="comp-name" required>
+        </label>
+        <label>
+          <span class="sub">Tax ID</span>
+          <input id="comp-tax">
+        </label>
+        <label class="full">
+          <span class="sub">Address</span>
+          <textarea id="comp-address"></textarea>
+        </label>
+        <label>
+          <span class="sub">Phone</span>
+          <input id="comp-phone">
+        </label>
+        <label>
+          <span class="sub">Contact Person</span>
+          <input id="comp-contact">
+        </label>
+        <button type="submit">Save</button>
+        <button type="button" id="comp-reset" class="secondary">Reset</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>List</h2>
+      <table class="table" id="comp-table">
+        <thead>
+          <tr>
+            <th>Name</th><th>Tax ID</th><th>Address</th><th>Phone</th><th>Contact</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const form = document.getElementById('comp-form');
+const tbody = document.querySelector('#comp-table tbody');
+const idField = document.getElementById('comp-id');
+const nameField = document.getElementById('comp-name');
+const taxField = document.getElementById('comp-tax');
+const addressField = document.getElementById('comp-address');
+const phoneField = document.getElementById('comp-phone');
+const contactField = document.getElementById('comp-contact');
+const resetBtn = document.getElementById('comp-reset');
+
+const api = async (url, options={}) => {
+  const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...options });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+};
+
+const load = async () => {
+  const data = await api('/api/companies');
+  tbody.innerHTML = '';
+  data.items.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${row.name}</td>
+      <td>${row.taxId || ''}</td>
+      <td>${row.address || ''}</td>
+      <td>${row.phone || ''}</td>
+      <td>${row.contact || ''}</td>
+      <td class="actions">
+        <button data-id="${row.id}" data-action="edit">Edit</button>
+        <button data-id="${row.id}" data-action="delete" class="secondary">Delete</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+};
+
+const resetForm = () => {
+  idField.value = '';
+  form.reset();
+};
+
+const socket = io();
+socket.on('data:update', ({ topic }) => {
+  if (topic === 'companies') load();
+});
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = {
+    name: nameField.value.trim(),
+    taxId: taxField.value.trim(),
+    address: addressField.value.trim(),
+    phone: phoneField.value.trim(),
+    contact: contactField.value.trim()
+  };
+  try {
+    if (idField.value) {
+      await api(`/api/companies/${idField.value}`, { method: 'PUT', body: JSON.stringify(payload) });
+    } else {
+      await api('/api/companies', { method: 'POST', body: JSON.stringify(payload) });
+    }
+    resetForm();
+    load();
+  } catch (err) {
+    alert('Save failed: ' + err.message);
+  }
+});
+
+resetBtn.addEventListener('click', resetForm);
+
+tbody.addEventListener('click', async (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  const action = btn.dataset.action;
+  if (action === 'edit') {
+    const row = btn.closest('tr');
+    idField.value = id;
+    nameField.value = row.children[0].textContent;
+    taxField.value = row.children[1].textContent;
+    addressField.value = row.children[2].textContent;
+    phoneField.value = row.children[3].textContent;
+    contactField.value = row.children[4].textContent;
+    nameField.focus();
+  }
+  if (action === 'delete') {
+    if (!confirm('Delete this company?')) return;
+    try {
+      await api(`/api/companies/${id}`, { method: 'DELETE' });
+      load();
+    } catch (err) {
+      alert('Delete failed: ' + err.message);
+    }
+  }
+});
+
+load();
+</script>
+</body>
+</html>

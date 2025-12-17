@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customers</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <div>Customers</div>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/companies.html">Companies</a>
+      <a href="/menu.html">Menu</a>
+      <a href="/bookings.html">Daily Bookings</a>
+      <a href="/reservations.html">Reservations</a>
+    </nav>
+  </header>
+  <main>
+    <div class="card">
+      <h1>Customers</h1>
+      <form id="customer-form">
+        <input type="hidden" id="cust-id">
+        <label>
+          <span class="sub">Name</span>
+          <input id="cust-name" required>
+        </label>
+        <label>
+          <span class="sub">Phone</span>
+          <input id="cust-phone">
+        </label>
+        <label>
+          <span class="sub">Email</span>
+          <input id="cust-email" type="email">
+        </label>
+        <label class="full">
+          <span class="sub">Notes</span>
+          <textarea id="cust-notes"></textarea>
+        </label>
+        <button id="cust-save" type="submit">Save</button>
+        <button id="cust-reset" type="button" class="secondary">Reset</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>List</h2>
+      <table class="table" id="cust-table">
+        <thead>
+          <tr>
+            <th>Name</th><th>Phone</th><th>Email</th><th>Notes</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const form = document.getElementById('customer-form');
+const tbody = document.querySelector('#cust-table tbody');
+const idField = document.getElementById('cust-id');
+const nameField = document.getElementById('cust-name');
+const phoneField = document.getElementById('cust-phone');
+const emailField = document.getElementById('cust-email');
+const notesField = document.getElementById('cust-notes');
+const resetBtn = document.getElementById('cust-reset');
+
+const api = async (url, options={}) => {
+  const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...options });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+};
+
+const load = async () => {
+  const data = await api('/api/customers');
+  tbody.innerHTML = '';
+  data.items.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${row.name}</td>
+      <td>${row.phone || ''}</td>
+      <td>${row.email || ''}</td>
+      <td>${row.notes || ''}</td>
+      <td class="actions">
+        <button data-id="${row.id}" data-action="edit">Edit</button>
+        <button data-id="${row.id}" data-action="delete" class="secondary">Delete</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+};
+
+const resetForm = () => {
+  idField.value = '';
+  form.reset();
+};
+
+const socket = io();
+socket.on('data:update', ({ topic }) => {
+  if (topic === 'customers') load();
+});
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = {
+    name: nameField.value.trim(),
+    phone: phoneField.value.trim(),
+    email: emailField.value.trim(),
+    notes: notesField.value.trim()
+  };
+  try {
+    if (idField.value) {
+      await api(`/api/customers/${idField.value}`, { method: 'PUT', body: JSON.stringify(payload) });
+    } else {
+      await api('/api/customers', { method: 'POST', body: JSON.stringify(payload) });
+    }
+    resetForm();
+    load();
+  } catch (err) {
+    alert('Save failed: ' + err.message);
+  }
+});
+
+resetBtn.addEventListener('click', resetForm);
+
+tbody.addEventListener('click', async (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  const action = btn.dataset.action;
+  if (action === 'edit') {
+    const row = btn.closest('tr');
+    idField.value = id;
+    nameField.value = row.children[0].textContent;
+    phoneField.value = row.children[1].textContent;
+    emailField.value = row.children[2].textContent;
+    notesField.value = row.children[3].textContent;
+    nameField.focus();
+  }
+  if (action === 'delete') {
+    if (!confirm('Delete this customer?')) return;
+    try {
+      await api(`/api/customers/${id}`, { method: 'DELETE' });
+      load();
+    } catch (err) {
+      alert('Delete failed: ' + err.message);
+    }
+  }
+});
+
+load();
+</script>
+</body>
+</html>

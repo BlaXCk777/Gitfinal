@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Bookings</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <div>Daily Bookings</div>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/customers.html">Customers</a>
+      <a href="/companies.html">Companies</a>
+      <a href="/menu.html">Menu</a>
+      <a href="/reservations.html">Reservations</a>
+    </nav>
+  </header>
+  <main>
+    <div class="card">
+      <h1>Bookings</h1>
+      <form id="book-form">
+        <input type="hidden" id="book-id">
+        <label>
+          <span class="sub">Date</span>
+          <input id="book-date" type="date" required>
+        </label>
+        <label>
+          <span class="sub">Time</span>
+          <input id="book-time" type="time">
+        </label>
+        <label>
+          <span class="sub">Customer Name</span>
+          <input id="book-customer" required>
+        </label>
+        <label>
+          <span class="sub">Table</span>
+          <input id="book-table">
+        </label>
+        <label>
+          <span class="sub">Party Size</span>
+          <input id="book-size" type="number" min="0" step="1" value="0">
+        </label>
+        <label class="full">
+          <span class="sub">Notes</span>
+          <textarea id="book-notes"></textarea>
+        </label>
+        <button type="submit">Save</button>
+        <button type="button" id="book-reset" class="secondary">Reset</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <h2 id="list-title">All Bookings</h2>
+        <div class="summary" id="summary"></div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label>View date
+          <input id="filter-date" type="date">
+        </label>
+        <button id="filter-btn" class="secondary">Refresh</button>
+        <button id="filter-all-btn" class="secondary">Show All</button>
+      </div>
+      <table class="table" id="book-table-body">
+        <thead>
+          <tr>
+            <th>Date</th><th>Time</th><th>Customer</th><th>Table</th><th>Party Size</th><th>Notes</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <h3 style="margin-top:16px;">Reserved Bookings (Reservations)</h3>
+      <table class="table" id="res-table-body">
+        <thead>
+          <tr>
+            <th>Date</th><th>Time</th><th>Table</th><th>Pax</th><th>Customer</th><th>Phone</th><th>Company</th><th>Menu</th><th>Notes</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const form = document.getElementById('book-form');
+const tbody = document.querySelector('#book-table-body tbody');
+const resTbody = document.querySelector('#res-table-body tbody');
+const idField = document.getElementById('book-id');
+const dateField = document.getElementById('book-date');
+const timeField = document.getElementById('book-time');
+const custField = document.getElementById('book-customer');
+const tableField = document.getElementById('book-table');
+const sizeField = document.getElementById('book-size');
+const notesField = document.getElementById('book-notes');
+const resetBtn = document.getElementById('book-reset');
+const filterDate = document.getElementById('filter-date');
+const filterBtn = document.getElementById('filter-btn');
+const filterAllBtn = document.getElementById('filter-all-btn');
+const summaryBox = document.getElementById('summary');
+const listTitle = document.getElementById('list-title');
+
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+const api = async (url, options={}) => {
+  const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...options });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+};
+
+const resetForm = () => {
+  idField.value = '';
+  form.reset();
+  dateField.value = todayStr();
+};
+
+const load = async () => {
+  const date = String(filterDate.value || '').trim();
+  const [bookData, resData] = await Promise.all([
+    api('/api/bookings' + (date ? `?date=${date}` : '')),
+    api('/api/reservations' + (date ? `?date=${date}` : ''))
+  ]);
+
+  tbody.innerHTML = '';
+  if (resTbody) resTbody.innerHTML = '';
+
+  listTitle.textContent = date ? `Bookings for ${date}` : 'All Bookings';
+  summaryBox.textContent =
+    `Bookings: ${bookData.totals?.bookings || 0} | Covers: ${bookData.totals?.covers || 0} | ` +
+    `Reservations: ${resData.totals?.reservations || 0} | Pax: ${resData.totals?.pax || 0}`;
+
+  (bookData.items || []).forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${row.date || ''}</td>
+      <td>${row.time || ''}</td>
+      <td>${row.customerName || ''}</td>
+      <td>${row.table || ''}</td>
+      <td>${row.partySize || 0}</td>
+      <td>${row.notes || ''}</td>
+      <td class="actions">
+        <button data-id="${row.id}" data-action="edit">Edit</button>
+        <button data-id="${row.id}" data-action="delete" class="secondary">Delete</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+
+  (resData.items || []).forEach(row => {
+    if (!resTbody) return;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${row.date || ''}</td>
+      <td>${row.time || ''}</td>
+      <td>${row.table || ''}</td>
+      <td>${row.pax || 0}</td>
+      <td>${row.customerName || ''}</td>
+      <td>${row.phone || ''}</td>
+      <td>${row.companyName || ''}</td>
+      <td>${row.menu || ''}</td>
+      <td>${row.notes || ''}</td>`;
+    resTbody.appendChild(tr);
+  });
+};
+
+const socket = io();
+socket.on('data:update', ({ topic }) => {
+  if (topic === 'bookings' || topic === 'reservations') load();
+});
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = {
+    date: dateField.value,
+    time: timeField.value,
+    customerName: custField.value.trim(),
+    table: tableField.value.trim(),
+    partySize: sizeField.value,
+    notes: notesField.value.trim()
+  };
+  try {
+    if (idField.value) {
+      await api(`/api/bookings/${idField.value}`, { method: 'PUT', body: JSON.stringify(payload) });
+    } else {
+      await api('/api/bookings', { method: 'POST', body: JSON.stringify(payload) });
+    }
+    resetForm();
+    load();
+  } catch (err) {
+    alert('Save failed: ' + err.message);
+  }
+});
+
+resetBtn.addEventListener('click', resetForm);
+filterBtn.addEventListener('click', load);
+if (filterAllBtn) {
+  filterAllBtn.addEventListener('click', () => {
+    filterDate.value = '';
+    load();
+  });
+}
+
+tbody.addEventListener('click', async (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  const action = btn.dataset.action;
+  if (action === 'edit') {
+    const row = btn.closest('tr');
+    idField.value = id;
+    dateField.value = row.children[0].textContent;
+    timeField.value = row.children[1].textContent;
+    custField.value = row.children[2].textContent;
+    tableField.value = row.children[3].textContent;
+    sizeField.value = row.children[4].textContent;
+    notesField.value = row.children[5].textContent;
+    dateField.focus();
+  }
+  if (action === 'delete') {
+    if (!confirm('Delete this booking?')) return;
+    try {
+      await api(`/api/bookings/${id}`, { method: 'DELETE' });
+      load();
+    } catch (err) {
+      alert('Delete failed: ' + err.message);
+    }
+  }
+});
+
+// Init
+const today = todayStr();
+dateField.value = today;
+filterDate.value = '';
+load();
+</script>
+</body>
+</html>

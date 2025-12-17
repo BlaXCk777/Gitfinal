@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu Items</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <div>Menu</div>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/customers.html">Customers</a>
+      <a href="/companies.html">Companies</a>
+      <a href="/bookings.html">Daily Bookings</a>
+      <a href="/reservations.html">Reservations</a>
+    </nav>
+  </header>
+  <main>
+    <div class="card">
+      <h1>Menu Items</h1>
+      <form id="menu-form">
+        <input type="hidden" id="menu-id">
+        <label>
+          <span class="sub">Name</span>
+          <input id="menu-name" required>
+        </label>
+        <label>
+          <span class="sub">Price</span>
+          <input id="menu-price" type="number" min="0" step="0.01" required>
+        </label>
+        <label>
+          <span class="sub">Category</span>
+          <input id="menu-category">
+        </label>
+        <label class="full">
+          <span class="sub">Description</span>
+          <textarea id="menu-desc"></textarea>
+        </label>
+        <button type="submit">Save</button>
+        <button type="button" id="menu-reset" class="secondary">Reset</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>List</h2>
+      <table class="table" id="menu-table">
+        <thead>
+          <tr>
+            <th>Name</th><th>Price</th><th>Category</th><th>Description</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const form = document.getElementById('menu-form');
+const tbody = document.querySelector('#menu-table tbody');
+const idField = document.getElementById('menu-id');
+const nameField = document.getElementById('menu-name');
+const priceField = document.getElementById('menu-price');
+const categoryField = document.getElementById('menu-category');
+const descField = document.getElementById('menu-desc');
+const resetBtn = document.getElementById('menu-reset');
+
+const api = async (url, options={}) => {
+  const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...options });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+};
+
+const load = async () => {
+  const data = await api('/api/menu');
+  tbody.innerHTML = '';
+  data.items.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${row.name}</td>
+      <td>${Number(row.price || 0).toFixed(2)}</td>
+      <td>${row.category || ''}</td>
+      <td>${row.description || ''}</td>
+      <td class="actions">
+        <button data-id="${row.id}" data-action="edit">Edit</button>
+        <button data-id="${row.id}" data-action="delete" class="secondary">Delete</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+};
+
+const resetForm = () => {
+  idField.value = '';
+  form.reset();
+};
+
+const socket = io();
+socket.on('data:update', ({ topic }) => {
+  if (topic === 'menu') load();
+});
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = {
+    name: nameField.value.trim(),
+    price: priceField.value,
+    category: categoryField.value.trim(),
+    description: descField.value.trim()
+  };
+  try {
+    if (idField.value) {
+      await api(`/api/menu/${idField.value}`, { method: 'PUT', body: JSON.stringify(payload) });
+    } else {
+      await api('/api/menu', { method: 'POST', body: JSON.stringify(payload) });
+    }
+    resetForm();
+    load();
+  } catch (err) {
+    alert('Save failed: ' + err.message);
+  }
+});
+
+resetBtn.addEventListener('click', resetForm);
+
+tbody.addEventListener('click', async (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  const action = btn.dataset.action;
+  if (action === 'edit') {
+    const row = btn.closest('tr');
+    idField.value = id;
+    nameField.value = row.children[0].textContent;
+    priceField.value = parseFloat(row.children[1].textContent) || 0;
+    categoryField.value = row.children[2].textContent;
+    descField.value = row.children[3].textContent;
+    nameField.focus();
+  }
+  if (action === 'delete') {
+    if (!confirm('Delete this menu item?')) return;
+    try {
+      await api(`/api/menu/${id}`, { method: 'DELETE' });
+      load();
+    } catch (err) {
+      alert('Delete failed: ' + err.message);
+    }
+  }
+});
+
+load();
+</script>
+</body>
+</html>

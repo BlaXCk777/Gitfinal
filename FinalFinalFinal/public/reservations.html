@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reservations</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <div>Reservations</div>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/customers.html">Customers</a>
+      <a href="/companies.html">Companies</a>
+      <a href="/menu.html">Menu</a>
+      <a href="/bookings.html">Daily Bookings</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="card">
+      <h1>Reservations</h1>
+      <form id="res-form">
+        <input type="hidden" id="res-id">
+
+        <label>
+          <span class="sub">Date</span>
+          <select id="res-date" required></select>
+        </label>
+
+        <label>
+          <span class="sub">Time</span>
+          <select id="res-time"></select>
+        </label>
+
+        <label>
+          <span class="sub">Table</span>
+          <select id="res-table"></select>
+        </label>
+
+        <label>
+          <span class="sub">Pax</span>
+          <select id="res-pax"></select>
+        </label>
+
+        <label>
+          <span class="sub">Customer Name</span>
+          <div style="display:flex;gap:8px;align-items:stretch;">
+            <select id="res-customer" required></select>
+            <button type="button" id="add-customer" class="secondary" title="Add customer" style="width:46px;min-width:46px;padding:0;">+</button>
+          </div>
+        </label>
+
+        <label>
+          <span class="sub">Phone</span>
+          <select id="res-phone"></select>
+        </label>
+
+        <label>
+          <span class="sub">Company</span>
+          <div style="display:flex;gap:8px;align-items:stretch;">
+            <select id="res-company"></select>
+            <button type="button" id="add-company" class="secondary" title="Add company" style="width:46px;min-width:46px;padding:0;">+</button>
+          </div>
+        </label>
+
+        <label class="full">
+          <span class="sub">Menu / Package</span>
+          <select id="res-menu"></select>
+        </label>
+
+        <label class="full">
+          <span class="sub">Notes</span>
+          <textarea id="res-notes"></textarea>
+        </label>
+
+        <button type="submit">Save</button>
+        <button type="button" id="res-reset" class="secondary">Reset</button>
+      </form>
+
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <h2 id="list-title">Reservations</h2>
+        <div class="summary" id="summary"></div>
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <label>View date
+          <input id="filter-date" type="date">
+        </label>
+        <button id="filter-btn" class="secondary">Refresh</button>
+      </div>
+
+      <table class="table" id="res-table-body">
+        <thead>
+          <tr>
+            <th>Date</th><th>Time</th><th>Table</th><th>Pax</th><th>Customer</th><th>Phone</th><th>Company</th><th>Menu</th><th>Notes</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const form = document.getElementById('res-form');
+const tbody = document.querySelector('#res-table-body tbody');
+
+const idField = document.getElementById('res-id');
+const dateField = document.getElementById('res-date');
+const timeField = document.getElementById('res-time');
+const tableField = document.getElementById('res-table');
+const paxField = document.getElementById('res-pax');
+const customerField = document.getElementById('res-customer');
+const phoneField = document.getElementById('res-phone');
+const companyField = document.getElementById('res-company');
+const menuField = document.getElementById('res-menu');
+const notesField = document.getElementById('res-notes');
+
+const addCustomerBtn = document.getElementById('add-customer');
+const addCompanyBtn = document.getElementById('add-company');
+
+const resetBtn = document.getElementById('res-reset');
+const filterDate = document.getElementById('filter-date');
+const filterBtn = document.getElementById('filter-btn');
+const summaryBox = document.getElementById('summary');
+const listTitle = document.getElementById('list-title');
+
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+const TIME_STEP_MIN = 10;
+
+const isToday = (dateStr) => {
+  const d = String(dateStr || '').trim();
+  return !!d && d === todayStr();
+};
+
+const timeToMinutes = (hhmm) => {
+  const v = String(hhmm || '').trim();
+  const m = /^(\d{2}):(\d{2})$/.exec(v);
+  if (!m) return null;
+  const h = parseInt(m[1], 10);
+  const mm = parseInt(m[2], 10);
+  if (Number.isNaN(h) || Number.isNaN(mm)) return null;
+  return (h * 60) + mm;
+};
+
+const nowRoundedUpMinutes = (stepMinutes) => {
+  const now = new Date();
+  const mins = now.getHours() * 60 + now.getMinutes();
+  return Math.min(24 * 60, Math.ceil(mins / stepMinutes) * stepMinutes);
+};
+
+const parseTableKey = (val) => {
+  const raw = String(val || '').trim();
+  const m = /^(\d+)\s*([A-Za-z]*)$/.exec(raw);
+  if (!m) return { num: Number.POSITIVE_INFINITY, suffix: raw.toUpperCase(), raw };
+  return { num: parseInt(m[1], 10) || Number.POSITIVE_INFINITY, suffix: (m[2] || '').toUpperCase(), raw };
+};
+
+const sortTableList = (tables) => {
+  return (tables || []).map(String).filter(Boolean).sort((a, b) => {
+    const pa = parseTableKey(a);
+    const pb = parseTableKey(b);
+    if (pa.num !== pb.num) return pa.num - pb.num;
+    const s = pa.suffix.localeCompare(pb.suffix);
+    if (s !== 0) return s;
+    return pa.raw.localeCompare(pb.raw);
+  });
+};
+
+const populateSelect = (id, values, opts = {}) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const allowBlank = opts.allowBlank !== false;
+  const blankLabel = String(opts.blankLabel || '— Select —');
+  const prev = String(el.value || '').trim();
+
+  el.innerHTML = '';
+  if (allowBlank) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = blankLabel;
+    el.appendChild(opt);
+  }
+  (values || []).forEach(v => {
+    const val = String(v || '').trim();
+    if (!val) return;
+    const opt = document.createElement('option');
+    opt.value = val;
+    opt.textContent = val;
+    el.appendChild(opt);
+  });
+
+  if (prev && Array.from(el.options).some(o => o.value === prev)) {
+    el.value = prev;
+  } else if (!allowBlank) {
+    el.selectedIndex = el.options.length ? 0 : -1;
+  } else {
+    el.value = '';
+  }
+};
+
+const ensureOption = (id, value) => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const v = String(value || '').trim();
+  if (!v) return;
+  if (Array.from(el.options).some(o => o.value === v)) return;
+  const opt = document.createElement('option');
+  opt.value = v;
+  opt.textContent = v;
+  el.appendChild(opt);
+};
+
+const upcomingDates = (days=60) => {
+  const out = [];
+  const base = new Date();
+  for (let i = 0; i < days; i++) {
+    const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + i);
+    const off = d.getTimezoneOffset() * 60000;
+    out.push(new Date(d.getTime() - off).toISOString().slice(0, 10));
+  }
+  return out;
+};
+
+const timeOptions = (stepMinutes=10) => {
+  const out = [];
+  for (let mins = 0; mins < 24*60; mins += stepMinutes) {
+    const h = String(Math.floor(mins/60)).padStart(2,'0');
+    const m = String(mins%60).padStart(2,'0');
+    out.push(`${h}:${m}`);
+  }
+  return out;
+};
+
+const buildTimeOptionsForDate = (dateStr) => {
+  const all = timeOptions(TIME_STEP_MIN);
+  if (!isToday(dateStr)) return all;
+
+  const minNow = nowRoundedUpMinutes(TIME_STEP_MIN);
+  return all.filter(t => {
+    const tm = timeToMinutes(t);
+    return tm !== null && tm >= minNow;
+  });
+};
+
+const refreshTimeOptionsForSelectedDate = (opts = {}) => {
+  const { preserveValue = true, setDefaultIfToday = true, extraValue = '' } = opts;
+  const dateStr = dateField.value;
+  const prev = preserveValue ? String(timeField.value || '').trim() : '';
+  const extra = String(extraValue || '').trim();
+
+  const base = buildTimeOptionsForDate(dateStr);
+  const merged = base.slice();
+  const addIfMissing = (v) => {
+    if (!v) return;
+    if (!merged.includes(v)) merged.push(v);
+  };
+  addIfMissing(prev);
+  addIfMissing(extra);
+
+  merged.sort((a, b) => (timeToMinutes(a) ?? 1e9) - (timeToMinutes(b) ?? 1e9));
+
+  populateSelect('res-time', merged, { allowBlank: true, blankLabel: '— Time (optional) —' });
+
+  if (prev && merged.includes(prev)) {
+    timeField.value = prev;
+  } else if (extra && merged.includes(extra)) {
+    timeField.value = extra;
+  } else if (setDefaultIfToday && isToday(dateStr)) {
+    const first = merged.find(v => !!String(v || '').trim());
+    if (first) timeField.value = first;
+  } else {
+    timeField.value = '';
+  }
+};
+
+const paxOptions = (max=30) => ['0', ...Array.from({length:max}, (_,i)=> String(i+1))];
+
+const loadReferenceLists = async () => {
+  // Tables: prefer backend pos-state (cross-device), fallback to POS localStorage.
+  try {
+    const stateRes = await api('/api/pos-state');
+    const list = stateRes?.state?.tableList;
+    if (Array.isArray(list) && list.length) {
+      try { localStorage.setItem('tableList', JSON.stringify(list)); } catch {}
+      const sorted = sortTableList(list);
+      populateSelect('res-table', sorted, { allowBlank: true, blankLabel: '— Table (optional) —' });
+    } else {
+      const raw = localStorage.getItem('tableList');
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (Array.isArray(parsed)) {
+        const sorted = sortTableList(parsed);
+        populateSelect('res-table', sorted, { allowBlank: true, blankLabel: '— Table (optional) —' });
+      }
+    }
+  } catch {
+    try {
+      const raw = localStorage.getItem('tableList');
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (Array.isArray(parsed)) {
+        const sorted = sortTableList(parsed);
+        populateSelect('res-table', sorted, { allowBlank: true, blankLabel: '— Table (optional) —' });
+      }
+    } catch {}
+  }
+
+  // Static lists
+  populateSelect('res-date', upcomingDates(60), { allowBlank: false, blankLabel: 'Select date' });
+  refreshTimeOptionsForSelectedDate({ preserveValue: true, setDefaultIfToday: false });
+  populateSelect('res-pax', paxOptions(30), { allowBlank: false, blankLabel: 'Select pax' });
+
+  // Backend lists
+  try {
+    const [cust, comp, menu] = await Promise.all([
+      api('/api/customers'),
+      api('/api/companies'),
+      api('/api/menu')
+    ]);
+
+    const custNames = (cust.items || []).map(c => String(c?.name || '').trim()).filter(Boolean);
+    const custPhones = (cust.items || []).map(c => String(c?.phone || '').trim()).filter(Boolean);
+    const compNames = (comp.items || []).map(c => String(c?.name || '').trim()).filter(Boolean);
+    const menuNames = (menu.items || []).map(m => String(m?.name || '').trim()).filter(Boolean);
+
+    populateSelect('res-customer', Array.from(new Set(custNames)), { allowBlank: false, blankLabel: 'Select customer' });
+    populateSelect('res-phone', Array.from(new Set(custPhones)), { allowBlank: true, blankLabel: '— Phone (optional) —' });
+    populateSelect('res-company', Array.from(new Set(compNames)), { allowBlank: true, blankLabel: '— Company (optional) —' });
+    populateSelect('res-menu', Array.from(new Set(menuNames)), { allowBlank: true, blankLabel: '— Menu (optional) —' });
+  } catch {
+    // ok
+  }
+};
+
+const api = async (url, options={}) => {
+  const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...options });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+};
+
+const addCustomerInline = async () => {
+  const name = (prompt('Customer name (required):') || '').trim();
+  if (!name) return;
+  const phone = (prompt('Customer phone (optional):') || '').trim();
+
+  const created = await api('/api/customers', {
+    method: 'POST',
+    body: JSON.stringify({ name, phone })
+  });
+
+  await loadReferenceLists();
+  ensureOption('res-customer', created?.name || name);
+  customerField.value = created?.name || name;
+  if (phone) {
+    ensureOption('res-phone', phone);
+    phoneField.value = phone;
+  }
+};
+
+const addCompanyInline = async () => {
+  const name = (prompt('Company name (required):') || '').trim();
+  if (!name) return;
+  const phone = (prompt('Company phone (optional):') || '').trim();
+
+  const created = await api('/api/companies', {
+    method: 'POST',
+    body: JSON.stringify({ name, phone })
+  });
+
+  await loadReferenceLists();
+  ensureOption('res-company', created?.name || name);
+  companyField.value = created?.name || name;
+};
+
+if (addCustomerBtn) {
+  addCustomerBtn.addEventListener('click', async () => {
+    try {
+      await addCustomerInline();
+    } catch (e) {
+      alert('Failed to add customer: ' + (e?.message || e));
+    }
+  });
+}
+
+if (addCompanyBtn) {
+  addCompanyBtn.addEventListener('click', async () => {
+    try {
+      await addCompanyInline();
+    } catch (e) {
+      alert('Failed to add company: ' + (e?.message || e));
+    }
+  });
+}
+
+const resetForm = () => {
+  idField.value = '';
+  form.reset();
+  dateField.value = todayStr();
+  paxField.value = '0';
+  refreshTimeOptionsForSelectedDate({ preserveValue: false, setDefaultIfToday: true });
+};
+
+const load = async () => {
+  const date = filterDate.value || todayStr();
+  const data = await api('/api/reservations' + (date ? `?date=${date}` : ''));
+
+  tbody.innerHTML = '';
+  listTitle.textContent = `Reservations for ${date}`;
+  summaryBox.textContent = `Reservations: ${data.totals?.reservations || 0} | Pax: ${data.totals?.pax || 0}`;
+
+  (data.items || []).forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${row.date || ''}</td>
+      <td>${row.time || ''}</td>
+      <td>${row.table || ''}</td>
+      <td>${row.pax || 0}</td>
+      <td>${row.customerName || ''}</td>
+      <td>${row.phone || ''}</td>
+      <td>${row.companyName || ''}</td>
+      <td>${row.menu || ''}</td>
+      <td>${row.notes || ''}</td>
+      <td class="actions">
+        <button data-id="${row.id}" data-action="edit">Edit</button>
+        <button data-id="${row.id}" data-action="delete" class="secondary">Delete</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+};
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  if (isToday(dateField.value) && String(timeField.value || '').trim()) {
+    const chosen = timeToMinutes(timeField.value);
+    const minNow = nowRoundedUpMinutes(TIME_STEP_MIN);
+    if (chosen !== null && chosen < minNow) {
+      alert('Time has already passed. Please choose a time from now onwards.');
+      refreshTimeOptionsForSelectedDate({ preserveValue: true, setDefaultIfToday: true });
+      return;
+    }
+  }
+
+  const payload = {
+    date: dateField.value,
+    time: timeField.value,
+    table: tableField.value.trim(),
+    pax: paxField.value,
+    customerName: customerField.value.trim(),
+    phone: phoneField.value.trim(),
+    companyName: companyField.value.trim(),
+    menu: menuField.value.trim(),
+    notes: notesField.value.trim()
+  };
+
+  try {
+    if (idField.value) {
+      await api(`/api/reservations/${idField.value}`, { method: 'PUT', body: JSON.stringify(payload) });
+    } else {
+      await api('/api/reservations', { method: 'POST', body: JSON.stringify(payload) });
+    }
+    resetForm();
+    load();
+  } catch (err) {
+    alert('Save failed: ' + err.message);
+  }
+});
+
+resetBtn.addEventListener('click', resetForm);
+filterBtn.addEventListener('click', load);
+
+dateField.addEventListener('change', () => {
+  refreshTimeOptionsForSelectedDate({ preserveValue: false, setDefaultIfToday: true });
+});
+
+tbody.addEventListener('click', async (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  const action = btn.dataset.action;
+
+  if (action === 'edit') {
+    const row = btn.closest('tr');
+    idField.value = id;
+    const dateV = row.children[0].textContent;
+    const timeV = row.children[1].textContent;
+    const tableV = row.children[2].textContent;
+    const paxV = row.children[3].textContent;
+    const custV = row.children[4].textContent;
+    const phoneV = row.children[5].textContent;
+    const compV = row.children[6].textContent;
+    const menuV = row.children[7].textContent;
+
+    ensureOption('res-date', dateV);
+    ensureOption('res-table', tableV);
+    ensureOption('res-pax', paxV);
+    ensureOption('res-customer', custV);
+    ensureOption('res-phone', phoneV);
+    ensureOption('res-company', compV);
+    ensureOption('res-menu', menuV);
+
+    dateField.value = String(dateV || '').trim();
+    refreshTimeOptionsForSelectedDate({ preserveValue: false, setDefaultIfToday: false, extraValue: String(timeV || '').trim() });
+    timeField.value = String(timeV || '').trim();
+    tableField.value = String(tableV || '').trim();
+    paxField.value = String(paxV || '').trim();
+    customerField.value = String(custV || '').trim();
+    phoneField.value = String(phoneV || '').trim();
+    companyField.value = String(compV || '').trim();
+    menuField.value = String(menuV || '').trim();
+    notesField.value = row.children[8].textContent;
+    customerField.focus();
+  }
+
+  if (action === 'delete') {
+    if (!confirm('Delete this reservation?')) return;
+    try {
+      await api(`/api/reservations/${id}`, { method: 'DELETE' });
+      load();
+    } catch (err) {
+      alert('Delete failed: ' + err.message);
+    }
+  }
+});
+
+const socket = io();
+socket.on('data:update', ({ topic }) => {
+  if (topic === 'reservations') load();
+  if (topic === 'customers' || topic === 'companies' || topic === 'menu') loadReferenceLists();
+});
+
+// Init
+const today = todayStr();
+dateField.value = today;
+filterDate.value = today;
+loadReferenceLists();
+refreshTimeOptionsForSelectedDate({ preserveValue: false, setDefaultIfToday: true });
+load();
+</script>
+</body>
+</html>
