@@ -46,7 +46,7 @@ Start-Sleep -Seconds 1
 
 # Open the POS UI (optional)
 if (-not $NoOpen) {
-  $posUrl = "http://localhost:$port/pos%20(1).html"
+  $posUrl = "http://localhost:$port/pos.html"
   Write-Host "Opening $posUrl"
   Start-Process $posUrl
 }

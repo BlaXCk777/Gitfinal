@@ -120,28 +120,24 @@
     }
   ],
   "posState": {
-    "tableSplits": {
-      "10": 3
-    },
-    "tableSplitDirections": {
-      "10": "v"
-    },
+    "tableSplits": {},
+    "tableSplitDirections": {},
     "tablePositions": {
       "9": {
-        "x": 75,
+        "x": 300,
         "y": 0
       },
       "10": {
-        "x": 450,
-        "y": 75
+        "x": 300,
+        "y": 150
       },
       "12": {
-        "x": 525,
-        "y": 225
+        "x": 375,
+        "y": 289
       },
       "13": {
-        "x": 525,
-        "y": 325
+        "x": 375,
+        "y": 375
       },
       "20": {
         "x": 0,
@@ -153,74 +149,74 @@
       },
       "15B": {
         "x": 675,
-        "y": 536
+        "y": 542
       },
       "6B": {
-        "x": 825,
-        "y": 86
+        "x": 772,
+        "y": 106
       },
       "1A": {
         "x": 1200,
         "y": 0
       },
       "1B": {
-        "x": 1200,
-        "y": 86
+        "x": 1202,
+        "y": 106
       },
       "7B": {
-        "x": 750,
-        "y": 86
+        "x": 686,
+        "y": 106
       },
       "2A": {
-        "x": 1125,
+        "x": 1116,
         "y": 0
       },
       "8A": {
-        "x": 675,
+        "x": 600,
         "y": 0
       },
       "6A": {
-        "x": 825,
+        "x": 772,
         "y": 0
       },
       "3A": {
-        "x": 1050,
+        "x": 1030,
         "y": 0
       },
       "4A": {
-        "x": 975,
+        "x": 944,
         "y": 0
       },
       "5A": {
-        "x": 900,
+        "x": 858,
         "y": 0
       },
       "18B": {
-        "x": 225,
+        "x": 150,
         "y": 86
       },
       "8B": {
-        "x": 675,
-        "y": 86
+        "x": 600,
+        "y": 106
       },
       "4B": {
-        "x": 975,
-        "y": 86
+        "x": 946,
+        "y": 106
       },
       "19C": {
-        "x": 225,
+        "x": 150,
         "y": 172
       },
       "7C": {
-        "x": 750,
+        "x": 900,
         "y": 300
       },
       "14A": {
-        "x": 525,
-        "y": 425
+        "x": 375,
+        "y": 461
       },
       "7A": {
-        "x": 750,
+        "x": 686,
         "y": 0
       },
       "18A": {
@@ -228,15 +224,15 @@
         "y": 86
       },
       "5B": {
-        "x": 900,
-        "y": 86
+        "x": 858,
+        "y": 106
       },
       "19B": {
-        "x": 150,
-        "y": 225
+        "x": 79,
+        "y": 172
       },
       "17B": {
-        "x": 225,
+        "x": 150,
         "y": 0
       },
       "17A": {
@@ -244,12 +240,12 @@
         "y": 0
       },
       "3B": {
-        "x": 1050,
-        "y": 86
+        "x": 1031,
+        "y": 106
       },
       "2B": {
-        "x": 1125,
-        "y": 86
+        "x": 1117,
+        "y": 106
       },
       "19A": {
         "x": 0,
@@ -277,196 +273,198 @@
       },
       "14B": {
         "x": 675,
-        "y": 450
+        "y": 456
       },
       "15A": {
-        "x": 525,
-        "y": 525
+        "x": 375,
+        "y": 547
       },
       "21B": {
         "x": 150,
         "y": 375
       },
       "Cashier": {
-        "x": 975,
-        "y": 375
+        "x": 1050,
+        "y": 300
       },
       "노래방": {
-        "x": 1125,
-        "y": 300
+        "x": 1164,
+        "y": 466
       }
     },
     "tableSizes": {
       "9": {
-        "width": 60,
-        "height": 60
-      },
-      "10": {
-        "width": 150,
-        "height": 60
-      },
-      "12": {
-        "width": 60,
-        "height": 60
-      },
-      "13": {
-        "width": 60,
-        "height": 60
-      },
-      "20": {
-        "width": 60,
-        "height": 60
-      },
-      "15B": {
-        "width": 60,
-        "height": 60
-      },
-      "4A": {
-        "width": 60,
-        "height": 60
-      },
-      "17A": {
-        "width": 60,
-        "height": 60
-      },
-      "17B": {
-        "width": 60,
-        "height": 60
-      },
-      "8A": {
-        "width": 60,
-        "height": 60
-      },
-      "7A": {
-        "width": 60,
-        "height": 60
-      },
-      "6A": {
-        "width": 60,
-        "height": 60
-      },
-      "5A": {
-        "width": 60,
-        "height": 60
-      },
-      "3A": {
-        "width": 60,
-        "height": 60
-      },
-      "2A": {
-        "width": 60,
-        "height": 60
-      },
-      "1A": {
-        "width": 60,
-        "height": 60
-      },
-      "18A": {
-        "width": 60,
-        "height": 60
-      },
-      "18B": {
-        "width": 60,
-        "height": 60
-      },
-      "8B": {
-        "width": 60,
-        "height": 60
-      },
-      "7B": {
-        "width": 60,
+        "width": 160,
         "height": 80
       },
+      "10": {
+        "width": 160,
+        "height": 80
+      },
+      "12": {
+        "width": 160,
+        "height": 80
+      },
+      "13": {
+        "width": 160,
+        "height": 80
+      },
+      "20": {
+        "width": 208,
+        "height": 91
+      },
+      "15B": {
+        "width": 337,
+        "height": 80
+      },
+      "4A": {
+        "width": 80,
+        "height": 100
+      },
+      "17A": {
+        "width": 144,
+        "height": 80
+      },
+      "17B": {
+        "width": 144,
+        "height": 80
+      },
+      "8A": {
+        "width": 80,
+        "height": 100
+      },
+      "7A": {
+        "width": 80,
+        "height": 100
+      },
+      "6A": {
+        "width": 80,
+        "height": 100
+      },
+      "5A": {
+        "width": 80,
+        "height": 100
+      },
+      "3A": {
+        "width": 80,
+        "height": 100
+      },
+      "2A": {
+        "width": 80,
+        "height": 100
+      },
+      "1A": {
+        "width": 80,
+        "height": 100
+      },
+      "18A": {
+        "width": 144,
+        "height": 80
+      },
+      "18B": {
+        "width": 144,
+        "height": 80
+      },
+      "8B": {
+        "width": 80,
+        "height": 143
+      },
+      "7B": {
+        "width": 80,
+        "height": 144
+      },
       "6B": {
-        "width": 60,
-        "height": 60
+        "width": 80,
+        "height": 144
       },
       "5B": {
-        "width": 60,
-        "height": 60
+        "width": 80,
+        "height": 144
       },
       "4B": {
-        "width": 60,
-        "height": 60
+        "width": 79,
+        "height": 144
       },
       "3B": {
-        "width": 60,
-        "height": 60
+        "width": 80,
+        "height": 144
       },
       "2B": {
-        "width": 60,
-        "height": 60
+        "width": 77,
+        "height": 144
       },
       "1B": {
-        "width": 60,
-        "height": 60
+        "width": 81,
+        "height": 144
       },
       "19A": {
-        "width": 137,
+        "width": 73,
         "height": 80
       },
       "19B": {
-        "width": 60,
-        "height": 60
+        "width": 65,
+        "height": 80
       },
       "19C": {
-        "width": 60,
-        "height": 60
+        "width": 144,
+        "height": 80
       },
       "21A": {
-        "width": 60,
-        "height": 60
+        "width": 144,
+        "height": 80
       },
       "21B": {
-        "width": 60,
-        "height": 60
+        "width": 144,
+        "height": 80
       },
       "8C": {
-        "width": 60,
-        "height": 60
+        "width": 108,
+        "height": 146
       },
       "7C": {
-        "width": 60,
-        "height": 60
+        "width": 108,
+        "height": 150
       },
       "22A": {
-        "width": 60,
-        "height": 60
+        "width": 144,
+        "height": 80
       },
       "22B": {
-        "width": 60,
-        "height": 60
+        "width": 144,
+        "height": 80
       },
       "23A": {
-        "width": 60,
-        "height": 60
+        "width": 144,
+        "height": 80
       },
       "23B": {
-        "width": 60,
-        "height": 60
+        "width": 144,
+        "height": 80
       },
       "14A": {
-        "width": 60,
+        "width": 160,
         "height": 80
       },
       "14B": {
-        "width": 60,
-        "height": 60
+        "width": 337,
+        "height": 80
       },
       "15A": {
-        "width": 60,
-        "height": 60
+        "width": 160,
+        "height": 80
       },
       "Cashier": {
-        "width": 60,
-        "height": 60
+        "width": 158,
+        "height": 160
       },
       "노래방": {
-        "width": 60,
-        "height": 80
+        "width": 105,
+        "height": 139
       }
     },
-    "tableNeedsCleaning": {},
+    "tableNeedsCleaning": {
+      "8C": true
+    },
     "tableList": [
       "17A",
       "17B",
@@ -513,30 +511,19 @@
     ],
     "orders": {
       "9": [],
-      "10": [
-        [
-          {
-            "nameKo": "삼겹살",
-            "nameEn": "삼겹살",
-            "qty": 2,
-            "unit": 280,
-            "total": 560
-          },
-          {
-            "nameKo": "삼겹살",
-            "nameEn": "삼겹살",
-            "qty": 1,
-            "unit": 280,
-            "total": 280
-          }
-        ],
-        [],
-        []
-      ],
+      "10": [],
       "12": [],
       "13": [],
       "20": [],
-      "17A": [],
+      "17A": [
+        {
+          "nameKo": "수끼",
+          "nameEn": "수끼",
+          "qty": 1,
+          "unit": 250,
+          "total": 250
+        }
+      ],
       "17B": [],
       "8A": [],
       "7A": [],
@@ -547,39 +534,9 @@
       "2A": [],
       "1A": [],
       "18A": [],
-      "18B": [
-        {
-          "nameKo": "쌈밥(HM)",
-          "nameEn": "쌈밥(HM)",
-          "qty": 2,
-          "unit": 300,
-          "total": 600
-        },
-        {
-          "nameKo": "Soju",
-          "nameEn": "Soju",
-          "qty": 1,
-          "unit": 350,
-          "total": 350
-        },
-        {
-          "nameKo": "맥주",
-          "nameEn": "맥주",
-          "qty": 1,
-          "unit": 170,
-          "total": 170
-        }
-      ],
+      "18B": [],
       "8B": [],
-      "7B": [
-        {
-          "nameKo": "삼겹살 (HM)",
-          "nameEn": "삼겹살 (HM)",
-          "qty": 4,
-          "unit": 330,
-          "total": 1320
-        }
-      ],
+      "7B": [],
       "6B": [],
       "5B": [],
       "4B": [],
@@ -588,38 +545,84 @@
       "1B": [],
       "19A": [],
       "19B": [],
-      "19C": [
+      "19C": [],
+      "21A": [],
+      "21B": [
         {
-          "nameKo": "쌈밥(HM)",
-          "nameEn": "쌈밥(HM)",
-          "qty": 2,
-          "unit": 300,
-          "total": 600
+          "nameKo": "쌈밥",
+          "nameEn": "쌈밥",
+          "qty": 1,
+          "unit": 280,
+          "total": 280
         },
         {
-          "nameKo": "음료",
-          "nameEn": "음료",
+          "nameKo": "삼겹살",
+          "nameEn": "삼겹살",
           "qty": 1,
-          "unit": 30,
-          "total": 30
+          "unit": 280,
+          "total": 280
         }
       ],
-      "21A": [],
-      "21B": [],
       "8C": [],
       "7C": [],
       "22A": [],
       "22B": [],
       "23A": [],
       "23B": [],
-      "14A": [],
+      "14A": [
+        {
+          "nameKo": "수끼",
+          "nameEn": "수끼",
+          "qty": 1,
+          "unit": 250,
+          "total": 250
+        },
+        {
+          "nameKo": "수끼",
+          "nameEn": "수끼",
+          "qty": 1,
+          "unit": 250,
+          "total": 250
+        }
+      ],
       "14B": [],
-      "15A": [],
+      "15A": [
+        {
+          "nameKo": "수끼",
+          "nameEn": "수끼",
+          "qty": 1,
+          "unit": 250,
+          "total": 250
+        },
+        {
+          "nameKo": "수끼(HM)",
+          "nameEn": "수끼(HM)",
+          "qty": 1,
+          "unit": 280,
+          "total": 280
+        },
+        {
+          "nameKo": "쌈밥",
+          "nameEn": "쌈밥",
+          "qty": 1,
+          "unit": 280,
+          "total": 280
+        },
+        {
+          "nameKo": "삼겹살 (HM)",
+          "nameEn": "삼겹살 (HM)",
+          "qty": 1,
+          "unit": 330,
+          "total": 330
+        }
+      ],
       "15B": [],
       "Cashier": [],
       "노래방": []
     },
-    "tableOccupiedOverrides": {}
+    "tableOccupiedOverrides": {
+      "8C": true
+    }
   },
   "exchangeRates": {
     "usd": 0.029,
