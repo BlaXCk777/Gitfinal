@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header>
+    <div>Sales</div>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/customers.html">Customers</a>
+      <a href="/companies.html">Companies</a>
+      <a href="/menu.html">Menu</a>
+      <a href="/bookings.html">Bookings</a>
+      <a href="/reservations.html">Reservations</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="card">
+      <h1>Sales (Bills History)</h1>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;justify-content:center;">
+        <label>
+          <span class="sub">From</span>
+          <input id="from" type="date">
+        </label>
+        <label>
+          <span class="sub">To</span>
+          <input id="to" type="date">
+        </label>
+        <button id="refresh" class="secondary">Refresh</button>
+        <button id="showAll" class="secondary">Show All</button>
+      </div>
+      <div class="summary" id="summary" style="justify-content:center;margin-top:12px;"></div>
+    </div>
+
+    <div class="card">
+      <h2>Bills</h2>
+      <table class="table" id="salesTable">
+        <thead>
+          <tr>
+            <th>Date/Time</th>
+            <th>Business Date</th>
+            <th>Table</th>
+            <th>Type</th>
+            <th>Total (THB)</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="card" id="detailsCard" style="display:none;">
+      <h2>Bill Details</h2>
+      <div class="summary" id="detailsSummary" style="justify-content:center;"></div>
+      <pre id="receipt" style="white-space:pre-wrap;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;overflow:auto;max-height:320px;"></pre>
+    </div>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const tbody = document.querySelector('#salesTable tbody');
+    const fromEl = document.getElementById('from');
+    const toEl = document.getElementById('to');
+    const refreshBtn = document.getElementById('refresh');
+    const showAllBtn = document.getElementById('showAll');
+    const summaryBox = document.getElementById('summary');
+
+    const detailsCard = document.getElementById('detailsCard');
+    const detailsSummary = document.getElementById('detailsSummary');
+    const receiptPre = document.getElementById('receipt');
+
+    const api = async (url) => {
+      const res = await fetch(url, { headers: { 'Content-Type': 'application/json' } });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    };
+
+    const fmtMoney = (n) => (Math.round(Number(n) || 0)).toLocaleString();
+
+    const rowType = (s) => {
+      if (s?.saleType) return String(s.saleType);
+      if (s?.split?.mode === 'pax') return 'split-pax';
+      if (s?.split?.mode === 'item') return 'split-item';
+      return 'full';
+    };
+
+    const load = async () => {
+      const from = String(fromEl.value || '').trim();
+      const to = String(toEl.value || '').trim();
+      const qs = new URLSearchParams();
+      if (from) qs.set('from', from);
+      if (to) qs.set('to', to);
+      const url = '/api/sales' + (qs.toString() ? `?${qs.toString()}` : '');
+
+      const data = await api(url);
+      const items = data.items || [];
+
+      summaryBox.textContent = `Bills: ${data.totals?.count || 0} | Total: ${fmtMoney(data.totals?.totalBaht || 0)} ฿`;
+
+      tbody.innerHTML = '';
+      items.forEach((s) => {
+        const tr = document.createElement('tr');
+        const createdAt = s.createdAt ? String(s.createdAt).replace('T', ' ').slice(0, 19) : '';
+        const businessDate = s.businessDate || '';
+        const table = s.table || s.tableName || '';
+        const type = rowType(s);
+        const total = fmtMoney(s.totalBaht);
+
+        tr.innerHTML = `
+          <td>${createdAt}</td>
+          <td>${businessDate}</td>
+          <td>${table}</td>
+          <td>${type}</td>
+          <td>${total}</td>
+          <td class="actions">
+            <button data-id="${s.id}" data-action="view">View</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (!items.length) {
+        detailsCard.style.display = 'none';
+      }
+    };
+
+    const showDetails = (s) => {
+      detailsCard.style.display = 'block';
+      const table = s.table || '';
+      const date = s.businessDate || '';
+      const total = fmtMoney(s.totalBaht);
+      const type = rowType(s);
+      detailsSummary.textContent = `Table: ${table || '-'} | Date: ${date || '-'} | Type: ${type} | Total: ${total} ฿`;
+      receiptPre.textContent = String(s.receiptText || s.receipt || '').trim() || 'No receipt text stored for this bill.';
+    };
+
+    refreshBtn.addEventListener('click', () => load().catch(e => alert('Load failed: ' + e.message)));
+    showAllBtn.addEventListener('click', () => {
+      fromEl.value = '';
+      toEl.value = '';
+      load().catch(e => alert('Load failed: ' + e.message));
+    });
+
+    tbody.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      if (action !== 'view' || !id) return;
+      try {
+        const s = await api(`/api/sales/${encodeURIComponent(id)}`);
+        showDetails(s);
+      } catch (err) {
+        alert('Load bill failed: ' + err.message);
+      }
+    });
+
+    const socket = io();
+    socket.on('data:update', ({ topic }) => {
+      if (topic === 'sales') load().catch(() => {});
+    });
+
+    load().catch(e => alert('Load failed: ' + e.message));
+  </script>
+</body>
+</html>

@@ -5,7 +5,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$url = "http://$Server`:$Port/pos%20(1).html"
+$url = "http://$Server`:$Port/pos.html"
 
 # Wait a bit for the service to come up after boot
 for ($i = 0; $i -lt 25; $i++) {

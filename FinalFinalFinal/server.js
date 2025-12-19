@@ -16,6 +16,7 @@ const DEFAULT_DATA = {
   menu: [],
   bookings: [],
   reservations: [],
+  sales: [],
   posState: {},
   exchangeRates: {
     usd: 0.029,  // 1 THB = 0.029 USD (approx 34.5 THB per USD)
@@ -50,6 +51,7 @@ const readData = () => {
       menu: Array.isArray(obj.menu) ? obj.menu : [],
       bookings: Array.isArray(obj.bookings) ? obj.bookings : [],
       reservations: Array.isArray(obj.reservations) ? obj.reservations : [],
+      sales: Array.isArray(obj.sales) ? obj.sales : [],
       exchangeRates: (obj.exchangeRates && typeof obj.exchangeRates === 'object') 
         ? { ...DEFAULT_DATA.exchangeRates, ...obj.exchangeRates }
         : DEFAULT_DATA.exchangeRates,
@@ -63,6 +65,16 @@ const readData = () => {
     console.error("Failed to read data file, resetting", err);
     return { ...DEFAULT_DATA };
   }
+};
+
+const isIsoDate = (value) => {
+  if (typeof value !== 'string') return false;
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+};
+
+const normalizeIsoDate = (value) => {
+  const s = String(value || '').trim();
+  return isIsoDate(s) ? s : null;
 };
 
 const writeData = (data) => {
@@ -132,10 +144,12 @@ app.put("/api/pos-state", (req, res) => {
     return res.status(400).json({ error: "state must be an object" });
   }
 
+  const clientId = String(req.get('X-POS-Client') || '').trim();
+
   const data = readData();
   data.posState = { ...(data.posState || {}), ...next };
   writeData(data);
-  emitUpdate("posState", { action: "merge", keys: Object.keys(next) });
+  emitUpdate("posState", { action: "merge", keys: Object.keys(next), clientId: clientId || null });
   res.json({ state: data.posState });
 });
 
@@ -448,8 +462,65 @@ app.delete("/api/reservations/:id", (req, res) => {
   res.json(removed);
 });
 
+// Sales (bill history)
+app.get('/api/sales', (req, res) => {
+  const data = readData();
+  const from = normalizeIsoDate(req.query?.from);
+  const to = normalizeIsoDate(req.query?.to);
+
+  let items = Array.isArray(data.sales) ? data.sales : [];
+
+  if (from || to) {
+    items = items.filter((s) => {
+      const d = normalizeIsoDate(s?.businessDate) || normalizeIsoDate(String(s?.createdAt || '').slice(0, 10));
+      if (!d) return false;
+      if (from && d < from) return false;
+      if (to && d > to) return false;
+      return true;
+    });
+  }
+
+  items = items
+    .slice()
+    .sort((a, b) => String(b?.createdAt || '').localeCompare(String(a?.createdAt || '')));
+
+  const totalBaht = items.reduce((sum, s) => sum + (Number(s?.totalBaht) || 0), 0);
+  res.json({ items, totals: { count: items.length, totalBaht } });
+});
+
+app.get('/api/sales/:id', (req, res) => {
+  const data = readData();
+  const item = (data.sales || []).find((s) => s.id === req.params.id);
+  if (!item) return res.status(404).json({ error: 'Not found' });
+  res.json(item);
+});
+
+app.post('/api/sales', (req, res) => {
+  const payload = (req.body && typeof req.body === 'object') ? req.body : null;
+  if (!payload) return res.status(400).json({ error: 'body must be an object' });
+
+  const businessDate = normalizeIsoDate(payload.businessDate) || new Date().toISOString().slice(0, 10);
+  const createdAt = typeof payload.createdAt === 'string' && payload.createdAt ? payload.createdAt : new Date().toISOString();
+  const totalBaht = Number(payload.totalBaht);
+  if (!Number.isFinite(totalBaht)) return res.status(400).json({ error: 'totalBaht must be a number' });
+
+  const data = readData();
+  const item = {
+    ...payload,
+    id: String(payload.id || nextId('sale')),
+    businessDate,
+    createdAt,
+    totalBaht
+  };
+  data.sales = Array.isArray(data.sales) ? data.sales : [];
+  data.sales.push(item);
+  writeData(data);
+  emitUpdate('sales', { action: 'create', item: { id: item.id, businessDate: item.businessDate, createdAt: item.createdAt, totalBaht: item.totalBaht } });
+  res.status(201).json(item);
+});
+
 const PORT = parseInt(process.env.PORT || "4000", 10) || 4000;
-const HOST = process.env.HOST || "192.168.1.23";
+const HOST = process.env.HOST || "0.0.0.0";
 
 httpServer.listen(PORT, HOST, () => {
   const printableHost = (HOST === "0.0.0.0" || HOST === "::") ? "<LAN IP>" : HOST;
