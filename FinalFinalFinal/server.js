@@ -401,16 +401,17 @@ app.get("/api/reservations", (req, res) => {
 });
 
 app.post("/api/reservations", (req, res) => {
-  const { customerName, phone, companyName, table, date, time, pax, menu, notes } = req.body || {};
-  if (!date || !customerName) return res.status(400).json({ error: "date and customerName are required" });
+  const { customerName, phone, companyName, table, date, time, pax, menu, notes, groupId } = req.body || {};
+  if (!date) return res.status(400).json({ error: "date is required" });
   const count = parseInt(pax ?? "0", 10) || 0;
   const data = readData();
   const item = {
     id: nextId("resv"),
+    groupId: String(groupId || '').trim() || null,
     date,
     time: time || "",
     table: table || "",
-    customerName,
+    customerName: customerName || "",
     phone: phone || "",
     companyName: companyName || "",
     pax: count,
@@ -429,7 +430,7 @@ app.put("/api/reservations/:id", (req, res) => {
   const idx = data.reservations.findIndex((r) => r.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: "Not found" });
   const current = data.reservations[idx];
-  const { customerName, phone, companyName, table, date, time, pax, menu, notes } = req.body || {};
+  const { customerName, phone, companyName, table, date, time, pax, menu, notes, groupId } = req.body || {};
 
   const updated = { ...current };
   if (date !== undefined) updated.date = date;
@@ -445,6 +446,7 @@ app.put("/api/reservations/:id", (req, res) => {
   }
   if (menu !== undefined) updated.menu = menu;
   if (notes !== undefined) updated.notes = notes;
+  if (groupId !== undefined) updated.groupId = String(groupId || '').trim() || null;
 
   data.reservations[idx] = updated;
   writeData(data);

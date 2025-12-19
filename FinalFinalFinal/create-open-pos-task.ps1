@@ -3,7 +3,8 @@ param(
   [string]$Server = 'localhost',
   [int]$Port = 4000,
   [int]$DelaySeconds = 2,
-  [string]$User = $env:USERNAME
+  [string]$User = $env:USERNAME,
+  [switch]$Kiosk
 )
 
 $ErrorActionPreference = 'Stop'
@@ -26,7 +27,8 @@ $trigger.Delay = $delay
 $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument (
   '-NoProfile -ExecutionPolicy Bypass -File ' + '"' + $scriptPath + '"' +
   ' -Server ' + '"' + $Server + '"' +
-  ' -Port ' + $Port
+  ' -Port ' + $Port +
+  ($(if ($Kiosk) { ' -Kiosk' } else { '' }))
 )
 
 $settings = New-ScheduledTaskSettingsSet `
@@ -45,5 +47,5 @@ Register-ScheduledTask -TaskName $TaskName -InputObject $task | Out-Null
 
 Write-Host "Scheduled Task created: $TaskName"
 Write-Host "- Trigger: At logon ($User)"
-Write-Host "- Action: open POS at http://$Server`:$Port/pos%20(1).html"
+Write-Host "- Action: open POS at http://$Server`:$Port/pos.html"
 Write-Host "To run now: Start-ScheduledTask -TaskName `"$TaskName`""

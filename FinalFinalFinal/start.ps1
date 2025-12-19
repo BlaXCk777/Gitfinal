@@ -1,5 +1,6 @@
 param(
-  [switch]$NoOpen
+  [switch]$NoOpen,
+  [switch]$Kiosk
 )
 
 $ErrorActionPreference = 'Stop'
@@ -46,9 +47,21 @@ Start-Sleep -Seconds 1
 
 # Open the POS UI (optional)
 if (-not $NoOpen) {
-  $posUrl = "http://localhost:$port/pos.html"
-  Write-Host "Opening $posUrl"
-  Start-Process $posUrl
+  if ($Kiosk) {
+    $open = Join-Path $root 'open-pos.ps1'
+    if (Test-Path $open) {
+      Write-Host "Opening POS in kiosk mode..."
+      & $open -Server 'localhost' -Port $port -Kiosk
+    } else {
+      $posUrl = "http://localhost:$port/pos.html"
+      Write-Host "Opening $posUrl"
+      Start-Process $posUrl
+    }
+  } else {
+    $posUrl = "http://localhost:$port/pos.html"
+    Write-Host "Opening $posUrl"
+    Start-Process $posUrl
+  }
 }
 
 Write-Host "Backend PID: $($proc.Id)"

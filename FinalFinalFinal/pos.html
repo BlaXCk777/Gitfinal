@@ -2169,6 +2169,7 @@ button.danger {
         <button id="addTableBtn" type="button">+ Table</button>
         <button class="quick-add-btn" type="button" onclick="showAdminPopup('/menu.html')">+ Menu</button>
         <button class="quick-add-btn" type="button" onclick="startToolbarReservation()">+ Reservations</button>
+        <button class="quick-add-btn" id="fitScreenBtn" type="button" onclick="toggleScreenFit()">⛶ Fit Screen</button>
       </div>
     </div>
 
@@ -2205,6 +2206,8 @@ button.danger {
         <button class="toolbar-btn" data-action="saveAsBase" title="Save Layout">💾</button>
         <button class="toolbar-btn" data-action="resetToBase" title="Load Layout">🔙</button>
         <button class="toolbar-btn" data-action="resetToGrid" title="Reset Grid">🔲</button>
+        <button class="toolbar-btn" data-action="autoFit" id="ribbonAutoFitBtn" title="Auto-Fit Screen">📐</button>
+        <button class="toolbar-btn" data-action="toggleAutoFit" id="ribbonToggleAutoFitBtn" title="Toggle Auto-Fit (on resize)">🔄</button>
         <span class="toolbar-sep"></span>
         <button class="toolbar-btn close" onclick="hideTableRibbon()" title="Close">✕</button>
       </div>
@@ -5247,6 +5250,113 @@ function toggleAutoFitTables() {
 window.addEventListener('resize', scheduleAutoFit);
 
 /* --------------------------------------------------
+   FIT SCREEN (FULLSCREEN + AUTO SCALE UI)
+   - Uses CSS zoom (works in Edge/Chrome)
+   - Persists toggle in localStorage
+-------------------------------------------------- */
+const POS_SCREEN_FIT_KEY = 'posScreenFitEnabled_v1';
+
+function isScreenFitEnabled() {
+  return localStorage.getItem(POS_SCREEN_FIT_KEY) === 'true';
+}
+
+function setScreenFitEnabled(enabled) {
+  localStorage.setItem(POS_SCREEN_FIT_KEY, enabled ? 'true' : 'false');
+}
+
+function enterFullscreenIfPossible() {
+  try {
+    if (document.fullscreenElement) return;
+    const el = document.documentElement;
+    if (el && el.requestFullscreen) el.requestFullscreen().catch(() => {});
+  } catch {}
+}
+
+function exitFullscreenIfPossible() {
+  try {
+    if (!document.fullscreenElement) return;
+    if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+  } catch {}
+}
+
+let _screenFitTimer = null;
+function scheduleScreenFitApply() {
+  if (!isScreenFitEnabled()) return;
+  if (_screenFitTimer) clearTimeout(_screenFitTimer);
+  _screenFitTimer = setTimeout(() => {
+    _screenFitTimer = null;
+    applyScreenFit();
+  }, 120);
+}
+
+function applyScreenFit() {
+  // Reset zoom so measurements are in "natural" pixels
+  try { document.body.style.zoom = '1'; } catch {}
+
+  // Wait a tick so layout settles
+  requestAnimationFrame(() => {
+    try {
+      const vw = Math.max(1, window.innerWidth);
+      const vh = Math.max(1, window.innerHeight);
+
+      // Measure full document size (content). This catches cases where UI overflows.
+      const doc = document.documentElement;
+      const fullW = Math.max(doc.scrollWidth, doc.clientWidth, document.body.scrollWidth, document.body.clientWidth);
+      const fullH = Math.max(doc.scrollHeight, doc.clientHeight, document.body.scrollHeight, document.body.clientHeight);
+
+      let scale = Math.min(vw / fullW, vh / fullH);
+      if (!Number.isFinite(scale) || scale <= 0) scale = 1;
+
+      // Allow slight upscale on large screens, but avoid ridiculous zoom.
+      scale = Math.max(0.55, Math.min(1.25, scale));
+
+      document.body.style.zoom = String(scale);
+    } catch {}
+  });
+}
+
+function clearScreenFit() {
+  try { document.body.style.zoom = '1'; } catch {}
+}
+
+function syncFitScreenBtn() {
+  const btn = document.getElementById('fitScreenBtn');
+  if (!btn) return;
+  const on = isScreenFitEnabled();
+  btn.textContent = on ? '⛶ Fit: ON' : '⛶ Fit Screen';
+}
+
+function toggleScreenFit() {
+  const next = !isScreenFitEnabled();
+  setScreenFitEnabled(next);
+
+  if (next) {
+    enterFullscreenIfPossible();
+    applyScreenFit();
+  } else {
+    clearScreenFit();
+    exitFullscreenIfPossible();
+  }
+  syncFitScreenBtn();
+}
+
+// Keep fit mode working across resizes and fullscreen changes
+window.addEventListener('resize', scheduleScreenFitApply);
+document.addEventListener('fullscreenchange', () => {
+  if (isScreenFitEnabled()) scheduleScreenFitApply();
+  syncFitScreenBtn();
+});
+
+// Restore on load
+document.addEventListener('DOMContentLoaded', () => {
+  syncFitScreenBtn();
+  if (isScreenFitEnabled()) {
+    // Don't auto-enter fullscreen without a user gesture; just apply scaling.
+    applyScreenFit();
+  }
+});
+
+/* --------------------------------------------------
    RIBBON TOOLBAR (replaces modal context menu)
 -------------------------------------------------- */
 function initTableContextMenu() {
@@ -5455,6 +5565,14 @@ function updateRibbonUI() {
   if (selectBtn) {
     selectBtn.style.background = selectTablesMode ? '#dbeafe' : '';
     selectBtn.style.borderColor = selectTablesMode ? '#3b82f6' : 'transparent';
+  }
+
+  // Update auto-fit toggle button
+  const toggleAutoFitBtn = document.getElementById('ribbonToggleAutoFitBtn');
+  if (toggleAutoFitBtn) {
+    const on = localStorage.getItem('autoFitTables') === 'true';
+    toggleAutoFitBtn.style.background = on ? '#dcfce7' : '';
+    toggleAutoFitBtn.style.borderColor = on ? '#22c55e' : 'transparent';
   }
 }
 
@@ -10942,6 +11060,41 @@ document.getElementById('reservationForm').addEventListener('submit', function(e
     setTableOccupiedOverride(t, false);
   });
 
+  // Persist to backend so reservations survive refresh.
+  // Backend accepts empty customerName (optional), but requires date.
+  (async () => {
+    try {
+      const ops = chosenTables.map(async (t) => {
+        const local = reservations[t] || {};
+        const payload = {
+          date,
+          time: time || '',
+          table: t,
+          customerName: name || '',
+          phone: phone || '',
+          companyName: company || '',
+          pax: (pax === '' || pax === null || pax === undefined) ? 0 : pax,
+          menu: menu || '',
+          notes: String(local.notes || '').trim() || '',
+          groupId
+        };
+
+        const id = String(local.id || '').trim();
+        if (id) {
+          const updated = await apiPut(`/reservations/${encodeURIComponent(id)}`, payload);
+          if (updated && updated.id) reservations[t].id = updated.id;
+          return;
+        }
+
+        const created = await apiPost('/reservations', payload);
+        if (created && created.id) reservations[t].id = created.id;
+      });
+
+      await Promise.allSettled(ops);
+      try { await loadReservationsFromBackend(date); } catch {}
+    } catch {}
+  })();
+
   // Persist suggestion lists ("backend" fallback via localStorage)
   try {
     addToStringArrayLS(RES_REF_KEYS.customers, name);
@@ -14097,7 +14250,7 @@ async function loadReservationsFromBackend(date = posLocalISODate()) {
         pax: Number.isFinite(+r?.pax) ? (parseInt(r.pax, 10) || 0) : 0,
         menu: String(r?.menu ?? '').trim(),
         notes: String(r?.notes ?? '').trim(),
-        groupId: String(r?.id ?? '').trim() || ['res', r?.date ?? date, r?.time ?? '', r?.phone ?? '', r?.customerName ?? '', r?.companyName ?? '', r?.menu ?? ''].map(v => String(v || '').trim()).join('|'),
+        groupId: String(r?.groupId ?? '').trim() || String(r?.id ?? '').trim() || ['res', r?.date ?? date, r?.time ?? '', r?.phone ?? '', r?.customerName ?? '', r?.companyName ?? '', r?.menu ?? ''].map(v => String(v || '').trim()).join('|'),
         source: 'backend'
       };
 
